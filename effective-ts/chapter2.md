@@ -90,3 +90,73 @@ interface Vector3D extends Vector2D {
 | T1                  | T2                  | T1과 T2의 합집합 |
 | T1 & T2             | T1과 T2의 교집합    |
 | unknown             | 전체 집합           |
+
+## Item 8. 타입 공간과 값 공간의 심벌 구분하기
+
+- 타입스크립트의 심벌(symbol)은 타입 공간이나 값 공간 중의 한 곳에 존재한다.
+
+```tsx
+interface Cylinder {
+  radius: number;
+  height: number;
+}
+
+const Cylinder = (radius: number, height: number) => ({ radius, height });
+```
+
+⇒ interface Cylinder에서 Cylinder는 타입으로 쓰인다. const Cylinder에서 Cylinder와 이름은 같지만 값으로 쓰이며, 서로 아무런 관련이 없다. 상황에 따라서 Cylinder는 타입으로 쓰일 수도 있고, 값으로 쓰일 수도 있다. 이러한 점은 가끔 오류를 야기한다.
+
+```tsx
+function calculateVolume(shape: unknown) {
+  if (shape instanceof Cylinder) {
+    shape.radius;
+    // ~~~~~~'{}' 형식에 'radius' 속성이 없습니다.
+  }
+}
+```
+
+⇒ 위의 예시에서는 아마도 instanceof를 이용해 shape가 Cylinder 타입인지 체크하려고 했을 것이다. 그러나 instanceof는 자바스크립트의 런타임 연산자이고, 값에 대해서 연산을 한다. 그래서 instanceof Cylinder는 타입이 아니라 함수를 참조한다.
+
+```tsx
+type T1 = "string literal";
+type T2 = 123;
+const v1 = "string literal";
+const v2 = 123;
+```
+
+- 일반적으로 type이나 interface 다음에 나오는 심벌은 타입인 반면, const나 let 선언에 쓰이는 것은 값이다.
+- 타입스크립트 코드에서 타입과 값은 번갈아 나올 수 있다.
+  - 타입 선언(:) 또는 단언문(as) 다음에 나오는 심벌은 타입인 반면, = 다음에 나오는 모든 것은 값이다.
+- 클래스가 타입으로 쓰일 때는 형태(속성과 메서드)가 사용되는 반면, 값으로 쓰일 때는 생성자가 사용된다.
+- typeof
+
+```tsx
+type T1 = typeof p; // 타입은 Person
+type T2 = typeof email;
+// 타입은 (p: Person, subject: string, body: string) => Response
+
+const v1 = typeof p; // 값은 'object'
+const v2 = typeof email; // 값은 'function'
+```
+
+- 타입의 관점에서 typeof는 값을 읽어서 타입스크립트 타입을 반환한다. 타입 공간의 typeof는 보다 큰 타입의 일부분으로 사용할 수 있고, type 구문으로 이름을 붙이는 용도로도 사용할 수 있다.
+- 값의 관점에서 typeof는 자바스크립트 런타임의 typeof 연산자가 된다. 값 공간의 typeof는 대상 심벌의 런타임 타입을 가리키는 문자열을 반환하며, 타입스크립트 타입과는 다르다.
+- 타입스크립트 타입의 종류가 무수히 많은 반면, 자바스크립트에는 과거부터 지금까지 단 6개(string, number, boolean, undefined, object, function)의 런타임 타입만이 존재한다.
+
+## Item 9. 타입 단언보다는 타입 선언을 사용하기
+
+- 타입스크립트에서 변수에 값을 할당하고 타입을 부여하는 방법은 두가지이다.
+
+```tsx
+interface Person {
+  name: string;
+}
+
+const alice: Person = { name: "Alice" }; // 타입은 Person
+const bob = { name: "Bob" } as Person; // 타입은 Person
+```
+
+- alice: Person
+  - 변수에 **타입 선언**을 붙여서 그 값이 선언된 타입임을 명시한다.
+- as Person
+  - **타입 단언**을 수행한다. 그러면 타입스크립트가 추론한 타입이 있더라도 Person 타입으로 간주한다.
