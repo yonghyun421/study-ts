@@ -426,3 +426,121 @@ const rollDice: DiceRollFn = (sides) => {
 - 매개변수나 반환 값에 타입을 명시하기보다는 함수 표현식 전체에 타입 구문을 적용하는 것이 좋다.
 - 만약 같은 타입 시그니처를 반복적으로 작성한 코드가 있다면 함수 타입을 분리해 내거나 이미 존재하는 타입을 찾아보도록 한다. 라이브러리를 직접 만든다면 공통 콜백에 타입을 제공해야 한다.
 - 다른 함수의 시그니처를 참조하려면 typeof fn을 사용한다.
+
+## Item 13. 타입과 인터페이스의 차이점 알기
+
+- 타입 스크립트에서 명명된 타입을 정의하는 방법은 두 가지가 있다.
+
+```tsx
+type TState = {
+  name: string;
+  capital: string;
+};
+// 또는 인터페이스를 사용해도 된다.
+interface IState {
+  name: string;
+  capital: string;
+}
+```
+
+⇒ 대부분의 경우에는 타입을 사용해도 되고 인터페이스를 사용해도 된다.
+
+- 인터페이스 선언과 타입 선언의 비슷한 점
+  - 명명된 타입은 인터페이스로 정의하든 타입으로 정의하든 상태에는 차이가 없다.
+  - 인덱스 시그니처는 인터페이스와 타입에서 모두 사용할 수 있다.
+    ```tsx
+    type TDict = { [key: string]: string };
+    interface IDict {
+      [key: string]: string;
+    }
+    ```
+  - 함수 타입도 인터페이스나 타입으로 정의할 수 있다.
+    ```tsx
+    type TFn = (x: number) => string;
+    interface IFn {
+      (x: number): string;
+    }
+
+    const toStrT: TFn = (x) => "" + x; // 정상
+    const toStrI: IFn = (x) => "" + x; // 정상
+    ```
+  - 함수 타입에 추가적인 속성이 있다면 타입이나 인터페이스 어떤 것을 선택하든 차이가 없다.
+    ```tsx
+    type TFnWithProperties = {
+      (x: number): number;
+      prop: string;
+    };
+    interface IFnWithProperties {
+      (x: number): number;
+      prop: string;
+    }
+    ```
+  - 타입 별칭과 인터페이스는 모두 제너릭이 가능하다.
+    ```tsx
+    type TPair<T> = {
+      first: T;
+      second: T;
+    };
+    interface IPair<T> {
+      first: T;
+      second: T;
+    }
+    ```
+  - 인터페이스는 타입을 확장할 수 있으며, 타입은 인터페이스를 확장할 수 있다.
+    ```tsx
+    interface IStateWithPop extends TState {
+      population: number;
+    }
+    type TStateWithPop = IState & { population: number };
+    ```
+    - 주의할점은 인터페이스는 유니온 타입 같은 복잡한 타입을 확장하지는 못한다. 복잡한 타입을 확장하고 싶다면 타입과 &를 사용해야 한다.
+  - 클래스를 구현할 때는 타입과 인터페이스를 둘 다 사용할 수 있다.
+    ```tsx
+    class StateT implements TState {
+      name: string = "";
+      capital: string = "";
+    }
+    class StateI implements IState {
+      name: string = "";
+      capital: string = "";
+    }
+    ```
+- 타입과 인터페이스의 다른 점
+  - 유니온 타입은 있지만 유니온 인터페이스라는 개념은 없다.
+    ```tsx
+    type AorB = "a" | "b";
+    ```
+    - 인터페이스는 타입을 확장할 수 있지만, 유니온은 할 수 없다.
+    - type 키워드는 일반적으로 interface보다 쓰임새가 많다. type 키워드는 유니온이 될 수도 있고, 매핑된 타입 또는 조건부 타입 같은 고급 기능에 활용되기도 한다.
+  - 튜플과 배열 타입도 type 키워드를 이용해 더 간결하게 표현할 수 있다.
+    ```tsx
+    type Pair = [number, number];
+    type StringList = string[];
+    type NamedNums = [string, ...number[]];
+    ```
+    ⇒ 인터페이스로도 튜플과 비슷하게 구현할 수 있긴 하지만 그렇게 하면 튜플에서 사용할 수 있는 concat 같은 메서드를 사용할 수 없다. 그러므로 튜플은 type 키워드로 구현하는 것이 낫다.
+  - 인터페이스는 타입에 없는 기능인 **보강**이 가능하다.
+    ```tsx
+    interface IState {
+      name: string;
+      capital: string;
+    }
+    interface IState {
+      population: number;
+    }
+    const wyoming: IState = {
+      name: "Wyoming",
+      capital: "Cheyenne",
+      population: 500_000,
+    }; // 정상
+    ```
+    ⇒ 위 예제처럼 속성을 확장하는 것을 **선언 병합**이라고 한다. 선언 병합은 주로 타입 선언 파일에서 사용된다. 따라서 타입 선언 파일을 작성 할 때는 선언 병합을 지원하기 위해 반드시 인터페이스를 사용해야 하며 표준을 따라야 한다.
+
+### 결론
+
+- 복잡한 타입이라면 고민할 것도 없이 타입 별칭을 사용하면 된다.
+- 그러나 타입과 인터페이스, 두 가지 방법으로 모두 표현할 수 있는 간단한 객체 타입이라면 일관성과 보강의 관점에서 고려해 봐야 한다.
+  - 일관되게 인터페이스를 사용하는 코드베이스에서 작업하고 있는 경우 ⇒ 인터페이스
+  - 일관되게 타입을 사용중인 경우 ⇒ 타입
+  - 아직 스타일이 확립되지 않은 프로젝트라면, 향후에 보강의 가능성이 있을지 생각해봐야 한다.
+  - but, 프로젝트 내부적으로 사용되는 타입에 선언 병합이 발생하는 것은 잘못된 설계이다. 따라서 이럴 때는 타입을 사용해야 한다.
