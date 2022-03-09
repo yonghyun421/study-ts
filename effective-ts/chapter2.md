@@ -394,3 +394,35 @@ const rollDice: DiceRollFn = (sides) => {
   /*...*/
 };
 ```
+
+- 함수 타입 선언의 장점
+  - 불필요한 코드의 반복을 줄인다.
+  ```tsx
+  function add(a: number, b: number) {
+    return a + b;
+  }
+  function sub(a: number, b: number) {
+    return a - b;
+  }
+  function mul(a: number, b: number) {
+    return a * b;
+  }
+  function div(a: number, b: number) {
+    return a / b;
+  }
+  ```
+  - 반복되는 함수 시그니처를 하나의 함수 타입으로 통합할 수도 있다.
+  ```tsx
+  type BinaryFn = (a: number, b: number) => number;
+  const add: BinaryFn = (a, b) => a + b;
+  const sub: BinaryFn = (a, b) => a - b;
+  const mul: BinaryFn = (a, b) => a * b;
+  const div: BinaryFn = (a, b) => a / b;
+  ```
+- 함수의 매개변수에 타입 선언을 하는 것보다 함수 표현식 전체 타입을 정의하는 것이 코드도 간결하고 안전하다. 다른 함수의 시그니처와 동일한 타입을 가지는 새 함수를 작성하거나, 동일한 타입 시그니처를 가지는 여러 개의 함수를 작성할 때는 매개변수의 타입과 반환 타입을 반복해서 작성하지 말고 함수 전체의 타입 선언을 적용해야 한다.
+
+### 요약
+
+- 매개변수나 반환 값에 타입을 명시하기보다는 함수 표현식 전체에 타입 구문을 적용하는 것이 좋다.
+- 만약 같은 타입 시그니처를 반복적으로 작성한 코드가 있다면 함수 타입을 분리해 내거나 이미 존재하는 타입을 찾아보도록 한다. 라이브러리를 직접 만든다면 공통 콜백에 타입을 제공해야 한다.
+- 다른 함수의 시그니처를 참조하려면 typeof fn을 사용한다.
