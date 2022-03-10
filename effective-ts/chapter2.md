@@ -446,15 +446,12 @@ interface IState {
 ⇒ 대부분의 경우에는 타입을 사용해도 되고 인터페이스를 사용해도 된다.
 
 - 인터페이스 선언과 타입 선언의 비슷한 점
+
   - 명명된 타입은 인터페이스로 정의하든 타입으로 정의하든 상태에는 차이가 없다.
   - 인덱스 시그니처는 인터페이스와 타입에서 모두 사용할 수 있다.
-    ```tsx
-    type TDict = { [key: string]: string };
-    interface IDict {
-      [key: string]: string;
-    }
-    ```
+    `tsx => type TDict = { [key: string]: string }; interface IDict { [key: string]: string; } `
   - 함수 타입도 인터페이스나 타입으로 정의할 수 있다.
+
     ```tsx
     type TFn = (x: number) => string;
     interface IFn {
@@ -464,6 +461,7 @@ interface IState {
     const toStrT: TFn = (x) => "" + x; // 정상
     const toStrI: IFn = (x) => "" + x; // 정상
     ```
+
   - 함수 타입에 추가적인 속성이 있다면 타입이나 인터페이스 어떤 것을 선택하든 차이가 없다.
     ```tsx
     type TFnWithProperties = {
@@ -505,6 +503,7 @@ interface IState {
       capital: string = "";
     }
     ```
+
 - 타입과 인터페이스의 다른 점
   - 유니온 타입은 있지만 유니온 인터페이스라는 개념은 없다.
     ```tsx
@@ -544,3 +543,57 @@ interface IState {
   - 일관되게 타입을 사용중인 경우 ⇒ 타입
   - 아직 스타일이 확립되지 않은 프로젝트라면, 향후에 보강의 가능성이 있을지 생각해봐야 한다.
   - but, 프로젝트 내부적으로 사용되는 타입에 선언 병합이 발생하는 것은 잘못된 설계이다. 따라서 이럴 때는 타입을 사용해야 한다.
+
+## Item 14. 타입 연산과 제너릭 사용으로 반복 줄이기
+
+```tsx
+const surfaceArea = (r, h) => 2 * Math.PI * r * (r + h);
+const volume = (r, h) => Math.PI * r * r * h;
+for (const [r, h] of [
+  [1, 1],
+  [1, 2],
+  [2, 1],
+]) {
+  console.log(
+    `Cylinder ${r} x ${h}`,
+    `Surface area: ${surfaceArea(r, h)}`,
+    `Volume: ${volume(r, h)}`
+  );
+}
+```
+
+⇒ 같은 코드를 반복하지 말라는 DRY(don’t repeat yourself) 원칙.
+
+- 타입 중복은 코드 중복만큼 많은 문제를 발생시킨다.
+- 반복을 줄이는 가장 간단한 방법은 타입에 이름을 붙이는 것이다.
+
+```tsx
+function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
+  return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+}
+```
+
+⇒ 위의 코드에서 타입이 반복적으로 등장하는 것을 볼 수 있다. 이 코드를 수정해 타입에 이름을 붙여보면
+
+```tsx
+interface Point2D {
+  x: number;
+  y: number;
+}
+function distance(a: Point2D, b: Point2D) {
+  /*...*/
+}
+```
+
+⇒ 이 코드는 상수를 사용해서 반복을 줄이는 기법을 동일하게 타입 시스템에 적용한 것이다.
+
+- 중복된 타입은 종종 문법에 의해서 가려지기도 한다.
+
+```tsx
+function get(url: string, opts: Options): Promise<Response> {
+  /*...*/
+}
+function post(url: string, opts: Options): Promise<Response> {
+  /*...*/
+}
+```
