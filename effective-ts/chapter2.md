@@ -886,3 +886,90 @@ obj = { ...obj, bye: 34 }; // 정상
 - 만약 함수가 매개변수를 수정하지 않는다면 readonly로 선언하는 것이 좋다. readonly 매개변수는 인터페이스를 명확하게 하며, 매개변수가 변경되는 것을 방지한다.
 - readonly를 사용하면 변경하면서 발생하는 오류를 방지할 수 있고, 변경이 발생하는 코드도 쉽게 찾을 수 있다.
 - readonly는 얕게 동작한다는 것을 명심해야 한다.
+
+## item 18. 매핑된 타입을 사용하여 값을 동기화하기
+
+```jsx
+function shouldUpdate(
+	oldProps: ScatterProps,
+	newProps: ScatterProps,
+){
+	let k: keyof ScatterProps;
+	for(k in oldProps) {
+		if(oldProps[k] !== newProps[k]){
+			if(k !== 'onClick') return true;
+		}
+	}
+	return false;
+}
+```
+
+⇒ 만약 새로운 속성이 추가되면 shouldUpdate 함수는 값이 변경될 때마다 차트를 다시 그릴 것이다. 이렇게 처리하는 것을 ‘보수적 접근법' 또는 ‘실패에 닫힌 접근법' 이라고 한다. 이 접근법을 이용하면 차트가 정확하지만 너무 자주 그려질 가능성이 있다.
+
+```jsx
+function shouldUpdate(
+	oldProps: ScatterProps,
+	newProps: ScatterProps,
+){
+	return (
+		oldProps.xs !== newProps.xs ||
+		oldProps.ys !== newProps.ys ||
+		oldProps.xRange !== newProps.xRange ||
+		oldProps.yRange !== newProps.yRange ||
+		oldProps.color !== newProps.color
+		// (no check for onClick)
+	);
+}
+```
+
+⇒ 이 코드는 차트를 불필요하게 다시 그리는 단점을 해결했다. 하지만 실제로 차트를 다시 그려야 할 경우에 누락되는 일이 생길 수 있다. 이는 히포크라테스 전집에 나오는 원칙 중 하나인 ‘우선, 망치지 말 것’ 을 어기기 때문에 일반적인 경우에 쓰는 방법은 아니다.
+
+- 앞선 두 가지 최적화 방법 모두 이상적이지 않다. 새로운 속성이 추가될 때 직접 shouldUpdate를 고치도록 하는 것이 낫다.
+
+```jsx
+interface ScatterProps {
+	xs: number[];
+	ys: number[];
+// ...
+	onClick: (x: number, y: number, index: number) => void;
+
+	// 참고: 여기에 속성을 추가하려면, shouldUpdate를 고치세요!
+}
+```
+
+⇒ 그러나 이 방법 역시 최선이 아니며, 타입 체커가 대신할 수 있게 하는 것이 좋다.
+
+- 다음은 타입 체커가 동작하도록 개선한 코드이다. 핵심은 매핑된 타입과 객체를 사용하는 것이다.
+
+```jsx
+const REQUIRES_UPDATE: {[k in keyof ScatterProps]: boolean} = {
+	xs: true,
+	ys: true,
+	xRange: true,
+	yRange: true,
+	color: true,
+	onClick: false,
+};
+
+function shouldUpdate(
+	oldProps: ScatterProps,
+	newProsp: ScatterProps,
+){
+	let k: keyof ScatterProps;
+	for(k in oldProps) {
+		if(oldProps[k] !== newProps[k] && REQUIRES_UPDATE[k]){
+				return true;
+			}
+		}
+	return false;
+}
+```
+
+⇒ [k in keyof ScatterProps]은 타입 체커에게 REQUIRES_UPDATE가 ScatterProps과 동일한 속성을 가져야 한다는 정보를 제공한다. 
+
+- 매핑된 타입은 한 객체가 또 다른 객체와 정확히 같은 속성을 가지게 할 때 이상적이다. 이번 예제처럼 매핑된 타입을 사용해 타입스크립트가 코드에 제약을 강제하도록 할 수 있다.
+
+### 요약
+
+- 매핑된 타입을 사용해서 관련된 값과 타입을 동기화하도록 한다.
+- 인터페이스에 새로운 속성을 추가할 때, 선택을 강제하도록 매핑된 타입을 고려해야 한다.
