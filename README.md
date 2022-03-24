@@ -3,14 +3,14 @@ typescript study
 
 TypeScript 공부용 repository 입니다.
 
-## Chapter 1.
+## Chapter 1. 타입스크립트 알아보기
 - item 1. 타입스크립트와 자바스크립트의 관계 이해하기
 - item 2. 타입스크립트 설정 이해하기
 - item 3. 코드 생성과 타입이 관계없음을 이해하기
 - item 4. 구조적 타이핑에 익숙해지기
 - item 5. any 타입 지양하기
 
-## Chapter 2.
+## Chapter 2. 타입스크립트의 타입 시스템
 - item 6. 편집기를 사용하여 타입 시스템 탐색하기
 - item 7. 타입이 값들의 집합이라고 생각하기
 - item 8. 타입 공간과 값 공간의 심벌 구분하기
@@ -25,7 +25,7 @@ TypeScript 공부용 repository 입니다.
 - item 17. 변경 관련된 오류 방지를 위해 readonly 사용하기
 - item 18. 매핑된 타입을 사용하여 값을 동기화하기
 
-## Chapter 3.
+## Chapter 3. 타입 추론
 - item 19. 추론 가능한 타입을 사용해 장황한 코드 방지하기
 - item 20. 다른 타입에는 다른 변수 사용하기
 - item 21. 타입 넓히기
